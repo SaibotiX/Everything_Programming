@@ -1,5 +1,16 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
+log_info() { echo -e "${YELLOW}[INFO]${NC} $1"; }
+
+set -e
+
 # Base directories
 # ---------------------------------------------------------- #
 PROJECT_DIR="/home/zuckram/Desktop/TheMoneyExample"
@@ -15,8 +26,10 @@ OUTPUT_FILE="$OUT_DIR/jUnitOutput.txt"
 
 # ---------------------------------------------------------- #
 # Source files
-SOURCE_FILES="$SRC_DIR/HelloWorld.java" #  \
-#            $SRC_DIR/Aufgabe5Test.java"
+SOURCE_FILES="$SRC_DIR/Dollar.java \
+	      $SRC_DIR/MoneyExampleTest.java"	   
+
+RUN_FILES="Dollar"
 # ---------------------------------------------------------- #
 
 # Define arrays of JAR files
@@ -46,9 +59,16 @@ COMPILE_CLASSPATH=$(create_classpath "$JUNIT_JAR" "${PROJECT_JARS[@]}")
 RUNTIME_CLASSPATH=$(create_classpath "$OUT_DIR" "${PROJECT_JARS[@]}")
 
 # Compile
-javac -cp "$COMPILE_CLASSPATH" \
-      -d "$OUT_DIR" \
-      $SOURCE_FILES
+compile_project() {
+    log_info "Compiling project..."
+    if ! javac -cp "$COMPILE_CLASSPATH" -d "$OUT_DIR" $SOURCE_FILES; then
+        log_error "Compilation failed"
+        exit 1
+    fi
+    log_success "Compilation successful"
+}
+
+compile_project
 
 # Run tests
 java -jar "$JUNIT_JAR" \
@@ -85,6 +105,6 @@ awk -v keyword="$START_MARKER" -v end_marker="$END_MARKER" '
 cat "$OUTPUT_FILE"
 
 # Run program
-java -cp "$RUNTIME_CLASSPATH" HelloWorld
+java -cp "$RUNTIME_CLASSPATH" "$RUN_FILES"
 
 #[NONE, SUMMARY, FLAT, TREE, VERBOSE]
